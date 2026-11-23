@@ -1,0 +1,44 @@
+# 项目自包含环境：Redis + MySQL（镜像版本对齐本机现有 5.0.3-alpine / 8.0.13）
+# 端口与 dnmp 错开，互不干扰：Redis 6380→6379，MySQL 3307→3306
+#   docker compose up -d     启动（schema.sql 首次自动导入，不用手动导）
+#   docker compose down      停止（不带 -v，数据卷保留）
+version: "3.8"
+
+services:
+  redis:
+    image: redis:5.0.3-alpine
+    container_name: ecommerce-lab-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mysql:
+    image: mysql:8.0.13
+    container_name: ecommerce-lab-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: ecomm_lab
+      MYSQL_USER: lab
+      MYSQL_PASSWORD: lab123
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p123456 --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  redis-data:
+  mysql-data:
