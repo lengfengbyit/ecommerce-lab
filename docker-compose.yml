@@ -2,7 +2,6 @@
 # 端口与 dnmp 错开，互不干扰：Redis 6380→6379，MySQL 3307→3306
 #   docker compose up -d     启动（schema.sql 首次自动导入，不用手动导）
 #   docker compose down      停止（不带 -v，数据卷保留）
-version: "3.8"
 
 services:
   redis:
